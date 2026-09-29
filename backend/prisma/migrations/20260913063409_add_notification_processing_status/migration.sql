@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `notification` MODIFY `status` ENUM('PENDING', 'PROCESSING', 'SENT', 'FAILED') NOT NULL DEFAULT 'PENDING';
