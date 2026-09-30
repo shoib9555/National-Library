@@ -211,10 +211,17 @@ export async function generatePaymentReceipt(paymentId: number) {
   // AUTHORIZED SIGNATURE
   // =========================
 
- const signaturePath = path.resolve(
-  __dirname,
-  "../../assets/national-library-signature.png"
-);
+  // The signature image is stored at:
+  // backend/assets/national-library-signature.png
+  //
+  // process.cwd() points to the backend directory on Render
+  // and also works when running the backend locally.
+
+  const signaturePath = path.resolve(
+    process.cwd(),
+    "assets",
+    "national-library-signature.png"
+  );
 
   doc.image(signaturePath, 385, 545, {
     width: 120,
