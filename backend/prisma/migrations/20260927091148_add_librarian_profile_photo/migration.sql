@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE `user` ADD COLUMN `profilePhotoUrl` VARCHAR(191) NULL;
+ALTER TABLE `User` ADD COLUMN `profilePhotoUrl` VARCHAR(191) NULL;
