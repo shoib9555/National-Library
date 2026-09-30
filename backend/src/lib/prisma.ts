@@ -3,6 +3,11 @@ import mariadb from "mariadb";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "../generated/client";
 
+
+console.log("DB_SSL:", process.env.DB_SSL);
+console.log("DB_SSL_CA present:", Boolean(process.env.DB_SSL_CA));
+console.log("DB_SSL_CA length:", process.env.DB_SSL_CA?.length ?? 0);
+
 const pool = mariadb.createPool({
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT || 3306),
