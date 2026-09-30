@@ -11,7 +11,13 @@ const pool = mariadb.createPool({
     database: process.env.DB_NAME,
 
     // Aiven requires SSL
-    ssl: process.env.DB_SSL === "true",
+    ssl: process.env.DB_SSL === "true"
+  ? {
+      ca: process.env.DB_SSL_CA
+        ? Buffer.from(process.env.DB_SSL_CA, "base64").toString("utf8")
+        : undefined,
+    }
+  : false,
 
     connectionLimit: 5,
     acquireTimeout: 10000,
