@@ -42,9 +42,7 @@ export async function recordCashPayment(
     throw new Error("This membership is already paid")
   }
 
-  if (membership.monthlyFee.toString() !== "800") {
-    throw new Error("Invalid membership fee")
-  }
+const amount = Number(membership.monthlyFee)
 
   const paymentDate = new Date()
 
@@ -54,7 +52,7 @@ export async function recordCashPayment(
     const payment = await tx.payment.create({
       data: {
         studentId: student.id,
-        amount: 800,
+        amount,
         paymentMethod: "CASH",
         paymentDate,
         status: "PAID",
@@ -136,9 +134,7 @@ export async function recordUpiPayment(
     throw new Error("This membership is already paid")
   }
 
-  if (membership.monthlyFee.toString() !== "800") {
-    throw new Error("Invalid membership fee")
-  }
+  const amount = Number(membership.monthlyFee)
 
   if (!transactionReference.trim()) {
     throw new Error("Transaction reference is required")
@@ -150,7 +146,7 @@ export async function recordUpiPayment(
     const payment = await tx.payment.create({
       data: {
         studentId: student.id,
-        amount: 800,
+        amount,
         paymentMethod: "UPI",
         paymentDate,
         status: "PAID",
