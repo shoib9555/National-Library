@@ -6,6 +6,7 @@ import {
   setStudentPasswordController,
   changePasswordController,
   uploadLibrarianProfilePhotoController,
+  logoutController,
 } from "../controllers/authController";
 
 import {
@@ -16,6 +17,12 @@ import upload from "../middleware/upload";
 const router = Router();
 
 router.post("/login", loginController);
+
+router.post(
+  "/logout",
+  authMiddleware,
+  logoutController,
+);
 
 router.post(
     "/set-password",

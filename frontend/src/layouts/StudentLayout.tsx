@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, Outlet, useNavigate } from "react-router-dom"
+import apiClient from "../apis/client"
 import { getMyStudentProfile } from "../apis/studentApi"
 import { dailyQuotes } from "../data/dailyQuotes"
 import nationalLibraryLogo from "../assets/national-library-logo.png"
@@ -45,11 +46,17 @@ function StudentLayout() {
     loadStudentProfile()
   }, [])
 
-  const handleLogout = () => {
+const handleLogout = async () => {
+  try {
+    await apiClient.post("/auth/logout")
+  } catch (error) {
+    console.error("Logout attendance update failed:", error)
+  } finally {
     sessionStorage.removeItem("token")
     sessionStorage.removeItem("role")
     navigate("/login")
   }
+}
 
   const navItems = [
     {

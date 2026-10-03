@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
+import * as attendanceService from "./attendanceService";
 
 export async function login(email: string, password: string) {
   const user = await prisma.user.findUnique({
@@ -279,4 +280,14 @@ export async function getCurrentUser(userId: number) {
   }
 
   return user
+}
+
+export async function logout(userId: number, role: string) {
+  if (role === "STUDENT") {
+    await attendanceService.autoMarkExit(userId);
+  }
+
+  return {
+    message: "Logout successful",
+  };
 }

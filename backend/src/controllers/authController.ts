@@ -205,3 +205,29 @@ export async function uploadLibrarianProfilePhotoController(
     });
   }
 }
+
+export async function logoutController(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    const result = await authService.logout(
+      req.user.userId,
+      req.user.role,
+    );
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Logout error:", error);
+
+    return res.status(500).json({
+      message: "Something went wrong during logout",
+    });
+  }
+}

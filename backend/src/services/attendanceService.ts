@@ -101,6 +101,58 @@ export async function markExit(userId: number) {
     };
 }
 
+export async function autoMarkExit(userId: number) {
+    const student = await prisma.student.findUnique({
+        where: {
+            userId,
+        },
+    });
+
+    if (!student) {
+        return null;
+    }
+
+    const attendance = await prisma.attendance.findFirst({
+        where: {
+            studentId: student.id,
+            exitTime: null,
+        },
+        orderBy: {
+            entryTime: "desc",
+        },
+    });
+
+    // No active attendance means there is nothing to close.
+    if (!attendance) {
+        return null;
+    }
+
+    const exitTime = new Date();
+
+    const durationMinutes = Math.floor(
+        (exitTime.getTime() - attendance.entryTime.getTime()) /
+        (1000 * 60)
+    );
+
+    const updatedAttendance = await prisma.attendance.update({
+        where: {
+            id: attendance.id,
+        },
+        data: {
+            exitTime,
+            durationMinutes,
+        },
+    });
+
+    return {
+        attendanceId: updatedAttendance.id,
+        studentCode: student.studentCode,
+        entryTime: updatedAttendance.entryTime,
+        exitTime: updatedAttendance.exitTime,
+        durationMinutes: updatedAttendance.durationMinutes,
+    };
+}
+
 export async function getMyAttendance(userId: number) {
     const student = await prisma.student.findUnique({
         where: {
