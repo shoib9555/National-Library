@@ -1,2 +1,2 @@
-ALTER TABLE `membership`
+ALTER TABLE `Membership`
 ADD COLUMN `accessHours` INTEGER NOT NULL DEFAULT 24;
