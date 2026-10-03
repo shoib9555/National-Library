@@ -133,6 +133,7 @@ model Membership {
   startDate  DateTime
   expiryDate DateTime
   monthlyFee Decimal          @db.Decimal(10, 2)
+  accessHours Int             @default(24)
   status     MembershipStatus @default(ACTIVE)
 
   createdAt  DateTime         @default(now())

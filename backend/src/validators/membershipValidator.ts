@@ -9,6 +9,14 @@ export const createMembershipSchema = z.object({
     startDate: z
         .string()
         .datetime({ offset: true }),
+
+    accessHours: z
+        .union([
+            z.literal(24),
+            z.literal(12),
+            z.literal(6),
+            z.literal(4),
+        ]),
 });
 
 export const renewMembershipSchema = z.object({

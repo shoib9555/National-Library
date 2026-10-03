@@ -1,0 +1,2 @@
+ALTER TABLE `membership`
+ADD COLUMN `accessHours` INTEGER NOT NULL DEFAULT 24;

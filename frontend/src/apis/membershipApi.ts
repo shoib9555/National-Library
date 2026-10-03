@@ -22,6 +22,7 @@ export interface Membership {
   startDate: string
   expiryDate: string
   monthlyFee: number
+  accessHours: number
   status: MembershipStatus
   payment: MembershipPayment | null
 }
@@ -33,6 +34,7 @@ export interface MembershipsResponse {
 export interface CreateMembershipRequest {
   studentCode: string
   startDate: string
+  accessHours: number
 }
 
 export interface CreateMembershipResponse {
@@ -43,6 +45,7 @@ export interface CreateMembershipResponse {
     startDate: string
     expiryDate: string
     monthlyFee: number
+     accessHours: number
     status: MembershipStatus
   }
 }

@@ -4,8 +4,23 @@ import { createMembershipRenewedNotification } from "./notificationService";
 
 export async function createMembership(
   studentCode: string,
-  startDate: Date
+  startDate: Date,
+  accessHours: number,
 ) {
+  let monthlyFee: number;
+
+  if (accessHours === 24) {
+    monthlyFee = 1000;
+  } else if (accessHours === 12) {
+    monthlyFee = 800;
+  } else if (accessHours === 6) {
+    monthlyFee = 600;
+  } else if (accessHours === 4) {
+    monthlyFee = 400;
+  } else {
+    throw new Error("Invalid membership plan");
+  }
+
   const result = await prisma.$transaction(async (tx) => {
     const student = await tx.student.findUnique({
       where: {
@@ -47,7 +62,8 @@ export async function createMembership(
         studentId: student.id,
         startDate,
         expiryDate,
-        monthlyFee: 800,
+        monthlyFee,
+        accessHours,
         status: "ACTIVE",
       },
     });
@@ -64,14 +80,12 @@ export async function createMembership(
     startDate: result.membership.startDate,
     expiryDate: result.membership.expiryDate,
     monthlyFee: result.membership.monthlyFee,
+    accessHours: result.membership.accessHours,
     status: result.membership.status,
   };
 }
 
-export async function renewMembership(
-  studentCode: string,
-  paymentDate: Date
-) {
+export async function renewMembership(studentCode: string, paymentDate: Date) {
   const result = await prisma.$transaction(async (tx) => {
     const student = await tx.student.findUnique({
       where: { studentCode },
@@ -98,6 +112,25 @@ export async function renewMembership(
       },
     });
 
+    let accessHours = 24;
+    let monthlyFee = 1000;
+
+    if (currentMembership) {
+      accessHours = currentMembership.accessHours;
+
+      if (accessHours === 24) {
+        monthlyFee = 1000;
+      } else if (accessHours === 12) {
+        monthlyFee = 800;
+      } else if (accessHours === 6) {
+        monthlyFee = 600;
+      } else if (accessHours === 4) {
+        monthlyFee = 400;
+      } else {
+        throw new Error("Invalid membership plan");
+      }
+    }
+
     let startDate: Date;
 
     if (currentMembership) {
@@ -113,17 +146,14 @@ export async function renewMembership(
     const expiryDate = new Date(startDate);
     expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-    const membershipStatus =
-      startDate > paymentDate
-        ? "UPCOMING"
-        : "ACTIVE";
+    const membershipStatus = startDate > paymentDate ? "UPCOMING" : "ACTIVE";
 
     const transactionReference = `CASH-${Date.now()}`;
 
     const payment = await tx.payment.create({
       data: {
         studentId: student.id,
-        amount: 800,
+        amount: monthlyFee,
         paymentMethod: "CASH",
         paymentDate,
         status: "PAID",
@@ -137,7 +167,8 @@ export async function renewMembership(
         paymentId: payment.id,
         startDate,
         expiryDate,
-        monthlyFee: 800,
+        monthlyFee,
+        accessHours,
         status: membershipStatus,
       },
     });
@@ -153,7 +184,7 @@ export async function renewMembership(
   await createMembershipRenewedNotification(
     result.membership.studentId,
     result.membership.id,
-    result.membership.expiryDate
+    result.membership.expiryDate,
   );
 
   return {
@@ -263,50 +294,50 @@ export async function updateMembershipStatuses() {
 }
 
 export async function getAllMemberships() {
-    const memberships = await prisma.membership.findMany({
-        orderBy: {
-            id: "asc"
+  const memberships = await prisma.membership.findMany({
+    orderBy: {
+      id: "asc",
+    },
+    include: {
+      student: {
+        select: {
+          studentCode: true,
+          name: true,
         },
-        include: {
-            student: {
-                select: {
-                    studentCode: true,
-                    name: true
-                }
-            },
-            payment: {
-  select: {
-    id: true,
-    amount: true,
-    paymentMethod: true,
-    paymentDate: true,
-    status: true,
-    transactionReference: true,
-  },
-}
-        }
-    });
+      },
+      payment: {
+        select: {
+          id: true,
+          amount: true,
+          paymentMethod: true,
+          paymentDate: true,
+          status: true,
+          transactionReference: true,
+        },
+      },
+    },
+  });
 
-    return memberships.map((membership) => ({
-        membershipId: membership.id,
-        studentCode: membership.student.studentCode,
-        studentName: membership.student.name,
-        startDate: membership.startDate,
-        expiryDate: membership.expiryDate,
-        monthlyFee: membership.monthlyFee,
-        status: membership.status,
-        payment: membership.payment
-            ? {
-                  paymentId: membership.payment.id,
-                  amount: membership.payment.amount,
-                  paymentMethod: membership.payment.paymentMethod,
-                  paymentDate: membership.payment.paymentDate,
-                  status: membership.payment.status,
-                  transactionReference: membership.payment.transactionReference,
-                  
-              }
-            : null
-    }));
+  return memberships.map((membership) => ({
+    membershipId: membership.id,
+    studentCode: membership.student.studentCode,
+    studentName: membership.student.name,
+    startDate: membership.startDate,
+    expiryDate: membership.expiryDate,
+    monthlyFee: membership.monthlyFee,
+    accessHours: membership.accessHours,
+    status: membership.status,
+    payment: membership.payment
+      ? {
+          paymentId: membership.payment.id,
+          amount: membership.payment.amount,
+          paymentMethod: membership.payment.paymentMethod,
+          paymentDate: membership.payment.paymentDate,
+          status: membership.payment.status,
+          transactionReference: membership.payment.transactionReference,
+        }
+      : null,
+  }));
 }
 
 export async function getMyMemberships(userId: number) {

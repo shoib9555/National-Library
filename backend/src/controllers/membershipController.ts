@@ -65,15 +65,17 @@ export async function createMembershipController(
             });
         }
 
-        const {
-            studentCode,
-            startDate,
-        } = validationResult.data;
+     const {
+    studentCode,
+    startDate,
+    accessHours,
+} = validationResult.data;
 
-        const membership = await createMembership(
-            studentCode,
-            new Date(startDate),
-        );
+const membership = await createMembership(
+    studentCode,
+    new Date(startDate),
+    accessHours,
+);
 
         return res.status(201).json({
             message: "Membership created successfully",
