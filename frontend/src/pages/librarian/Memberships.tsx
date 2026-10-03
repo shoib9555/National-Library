@@ -60,10 +60,10 @@ function Memberships() {
       setError("")
 
       await createMembership({
-  studentCode: selectedStudentCode,
-  startDate: new Date(`${startDate}T00:00:00`).toISOString(),
-  accessHours: Number(membershipPlan),
-})
+        studentCode: selectedStudentCode,
+        startDate: new Date(`${startDate}T00:00:00`).toISOString(),
+        accessHours: Number(membershipPlan),
+      })
 
       const data = await getAllMemberships()
 
@@ -300,13 +300,13 @@ function Memberships() {
 
                     {/* Membership ID */}
                     <td className="px-6 py-4">
-  <p className="text-sm font-semibold text-slate-900">
-    {membership.accessHours} Hours
-  </p>
-  <p className="mt-1 text-xs text-slate-500">
-    #{membership.membershipId}
-  </p>
-</td>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {membership.accessHours} Hours
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        #{membership.membershipId}
+                      </p>
+                    </td>
 
                     {/* Start Date */}
                     <td className="px-6 py-4 text-sm text-slate-600">
@@ -467,23 +467,23 @@ function Memberships() {
               </div>
 
               {/* Membership Plan */}
-<div>
-  <label className="mb-2 block text-sm font-semibold text-slate-700">
-    Membership Plan
-  </label>
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Membership Plan
+                </label>
 
-  <select
-    value={membershipPlan}
-    onChange={(e) => setMembershipPlan(e.target.value)}
-    disabled={creatingMembership}
-    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100"
-  >
-    <option value="24">24 Hours — ₹1,000 / month</option>
-    <option value="12">12 Hours — ₹800 / month</option>
-    <option value="6">6 Hours — ₹600 / month</option>
-    <option value="4">4 Hours — ₹400 / month</option>
-  </select>
-</div>
+                <select
+                  value={membershipPlan}
+                  onChange={(e) => setMembershipPlan(e.target.value)}
+                  disabled={creatingMembership}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+                >
+                  <option value="24">24 Hours — ₹1,000 / month</option>
+                  <option value="12">12 Hours — ₹800 / month</option>
+                  <option value="6">6 Hours — ₹600 / month</option>
+                  <option value="4">4 Hours — ₹400 / month</option>
+                </select>
+              </div>
 
               {/* Fee */}
               <div className="rounded-xl bg-blue-50 p-4">
@@ -492,15 +492,15 @@ function Memberships() {
                 </p>
 
                 <p className="mt-1 text-2xl font-bold text-blue-700">
-  ₹
-  {membershipPlan === "24"
-    ? "1,000"
-    : membershipPlan === "12"
-      ? "800"
-      : membershipPlan === "6"
-        ? "600"
-        : "400"}
-</p>
+                  ₹
+                  {membershipPlan === "24"
+                    ? "1,000"
+                    : membershipPlan === "12"
+                      ? "800"
+                      : membershipPlan === "6"
+                        ? "600"
+                        : "400"}
+                </p>
               </div>
 
               {/* Modal Error */}
@@ -608,7 +608,7 @@ function Memberships() {
                 </p>
 
                 <p className="mt-1 text-2xl font-bold text-blue-700">
-                  ₹800
+                  ₹{selectedMembership.monthlyFee}
                 </p>
               </div>
             </div>

@@ -99,8 +99,8 @@ function Payments() {
         setTransactionReference("")
         return
       }
-      
-     
+
+
     } catch (error) {
       console.error("Failed to process payment:", error)
       setError("Failed to process payment")
@@ -145,6 +145,11 @@ function Payments() {
       payment.paymentMethod === methodFilter
     return matchesSearch && matchesStatus && matchesMethod
   })
+
+  const selectedMembership = memberships.find(
+    (membership) =>
+      membership.membershipId === Number(selectedMembershipId)
+  )
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -436,7 +441,7 @@ function Payments() {
                         Record Payment
                       </h2>
                       <p className="mt-1 text-sm text-slate-500">
-                      Record a cash or UPI membership payment.
+                        Record a cash or UPI membership payment.
                       </p>
                     </div>
                     <button
@@ -498,7 +503,9 @@ function Payments() {
                       Amount
                     </label>
                     <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg font-bold text-slate-900">
-                      ₹800
+                      {selectedMembership
+                        ? `₹${Number(selectedMembership.monthlyFee).toLocaleString("en-IN")}`
+                        : "Select a membership"}
                     </div>
                   </div>
                   {/* Payment Method */}
@@ -530,7 +537,7 @@ function Payments() {
                       >
                         UPI
                       </button>
-                      
+
                     </div>
                   </div>
                   {/* UPI Reference */}
@@ -576,7 +583,7 @@ function Payments() {
                     disabled={recordingPayment}
                     className="rounded-xl bg-[#1E3A8A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#172F70] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-               {recordingPayment ? "Recording..." : "Record Payment"}
+                    {recordingPayment ? "Recording..." : "Record Payment"}
                   </button>
                 </div>
               </div>
