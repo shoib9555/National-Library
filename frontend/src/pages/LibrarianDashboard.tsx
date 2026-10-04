@@ -468,7 +468,7 @@ function LibrarianDashboard() {
                     data={studentPieData}
                     cx="50%"
                     cy="48%"
-                    outerRadius={145}
+                    outerRadius="55%"
                     dataKey="value"
                     stroke="#ffffff"
                     strokeWidth={3}

@@ -28,6 +28,8 @@ function getDailyQuote() {
 function StudentLayout() {
   const navigate = useNavigate()
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null)
   const [studentName, setStudentName] = useState("")
 
@@ -46,17 +48,17 @@ function StudentLayout() {
     loadStudentProfile()
   }, [])
 
-const handleLogout = async () => {
-  try {
-    await apiClient.post("/auth/logout")
-  } catch (error) {
-    console.error("Logout attendance update failed:", error)
-  } finally {
-    sessionStorage.removeItem("token")
-    sessionStorage.removeItem("role")
-    navigate("/login")
+  const handleLogout = async () => {
+    try {
+      await apiClient.post("/auth/logout")
+    } catch (error) {
+      console.error("Logout attendance update failed:", error)
+    } finally {
+      sessionStorage.removeItem("token")
+      sessionStorage.removeItem("role")
+      navigate("/login")
+    }
   }
-}
 
   const navItems = [
     {
@@ -393,22 +395,145 @@ const handleLogout = async () => {
         </div>
       </aside>
 
+      {/* Mobile Sidebar */}
+      {mobileMenuOpen && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 z-40 bg-slate-900/40 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Drawer */}
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-hidden bg-gradient-to-b from-[#c7ddff] via-[#dbeafe] to-[#b8d4ff] text-slate-700 shadow-xl lg:hidden">
+            {/* Mobile Header */}
+            <div className="flex h-20 items-center justify-between border-b border-blue-100 bg-white/60 px-5 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm">
+                  <img
+                    src={nationalLibraryLogo}
+                    alt="National Library"
+                    className="h-full w-full object-contain p-1"
+                  />
+                </div>
+
+                <div>
+                  <h1 className="text-base font-bold tracking-tight text-[#10284a]">
+                    The National Library
+                  </h1>
+
+                  <p className="text-xs text-slate-500">
+                    Student Portal
+                  </p>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-white hover:text-slate-700"
+                aria-label="Close menu"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.8"
+                    d="M6 6l12 12M18 6L6 18"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Mobile Navigation */}
+            <nav className="student-sidebar-scroll min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-6">
+              <p className="mb-4 px-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                Student Menu
+              </p>
+
+              {navItems.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-4 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-blue-500">
+                    {item.icon}
+                  </span>
+
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+
+            {/* Mobile Logout */}
+            <div className="border-t border-blue-100 p-4">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center justify-center rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-100 hover:text-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          </aside>
+        </>
+      )}
+
       {/* =====================================================
           MAIN AREA
       ===================================================== */}
-      <div className="ml-20 min-h-screen transition-[margin-left] duration-300 ease-in-out peer-hover:ml-72">
+      <div className="min-h-screen transition-[margin-left] duration-300 ease-in-out lg:ml-20 lg:peer-hover:ml-72">
 
         {/* =================================================
             NAVBAR
         ================================================= */}
         <header className="sticky top-0 z-30 h-20 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
 
-          <div className="flex h-full items-center justify-between px-6 lg:px-8">
+          <div className="flex h-full items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+
+            {/* Mobile Menu Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-blue-50 hover:text-blue-600 lg:hidden"
+              aria-label="Open menu"
+            >
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.8"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+
+            <div className="min-w-0 flex-1 sm:hidden">
+              <p className="truncate text-sm font-bold text-[#164b91]">
+                The National Library
+              </p>
+              <p className="truncate text-[10px] font-medium text-slate-500">
+                Student Portal
+              </p>
+            </div>
 
             {/* ================================
         LEFT SIDE - SEARCH
     ================================= */}
-            <div className="flex min-w-0 flex-1 items-center">
+            <div className="hidden min-w-0 flex-1 items-center sm:flex">
               <div className="min-w-0">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">
                   ✦ The National Library Motivational Quotes

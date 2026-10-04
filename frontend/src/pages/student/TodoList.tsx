@@ -10,6 +10,7 @@ import {
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([])
   const [loading, setLoading] = useState(true)
+  const [savingTodo, setSavingTodo] = useState(false)
   const [search, setSearch] = useState("")
 
   const [showModal, setShowModal] = useState(false)
@@ -20,6 +21,7 @@ export default function TodoList() {
   const [dueDate, setDueDate] = useState("")
 
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletingTodo, setDeletingTodo] = useState(false)
   const [todoToDelete, setTodoToDelete] = useState<number | null>(null)
 
   const loadTodos = async () => {
@@ -99,6 +101,7 @@ export default function TodoList() {
     }
 
     try {
+      setSavingTodo(true)
       if (editingTodo) {
         const updatedTodo = await updateTodo(editingTodo.id, {
           title: title.trim(),
@@ -128,6 +131,8 @@ export default function TodoList() {
       closeModal()
     } catch (error) {
       console.error("Failed to save todo:", error)
+    } finally {
+      setSavingTodo(false)
     }
   }
 
@@ -158,6 +163,8 @@ export default function TodoList() {
     }
 
     try {
+      setDeletingTodo(true)
+
       await deleteTodo(todoToDelete)
 
       setTodos((currentTodos) =>
@@ -168,6 +175,8 @@ export default function TodoList() {
       setTodoToDelete(null)
     } catch (error) {
       console.error("Failed to delete todo:", error)
+    } finally {
+      setDeletingTodo(false)
     }
   }
 
@@ -469,9 +478,14 @@ export default function TodoList() {
 
                 <button
                   type="submit"
-                  className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                  disabled={savingTodo}
+                  className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {editingTodo ? "Save Changes" : "Add Todo"}
+                  {savingTodo
+                    ? "Adding..."
+                    : editingTodo
+                      ? "Save Changes"
+                      : "Add Todo"}
                 </button>
               </div>
             </form>
@@ -541,9 +555,10 @@ export default function TodoList() {
               <button
                 type="button"
                 onClick={confirmDelete}
-                className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+                disabled={deletingTodo}
+                className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Delete
+                {deletingTodo ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

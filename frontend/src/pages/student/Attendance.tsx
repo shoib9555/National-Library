@@ -202,7 +202,7 @@ function Attendance() {
       {/* =====================================================
           PAGE HEADER
       ===================================================== */}
-      <section className="relative mb-6 overflow-hidden rounded-[20px] bg-gradient-to-r from-[#eaf5ff] via-[#eef7ff] to-[#dceeff] px-7 py-7">
+     <section className="relative mb-6 overflow-hidden rounded-[20px] bg-gradient-to-r from-[#eaf5ff] via-[#eef7ff] to-[#dceeff] px-5 py-6 sm:px-7 sm:py-7">
 
         <div className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-blue-200/30" />
 
@@ -213,11 +213,11 @@ function Attendance() {
             Student Portal
           </p>
 
-          <h1 className="text-[34px] font-bold tracking-[-0.8px] text-[#10203d]">
+          <h1 className="text-[30px] font-bold tracking-[-0.8px] text-[#10203d] sm:text-[34px]">
             My Attendance
           </h1>
 
-          <p className="mt-1.5 text-[17px] text-[#58708f]">
+          <p className="mt-1.5 text-[15px] leading-6 text-[#58708f] sm:text-[17px]">
             Track your library visits and study time.
           </p>
         </div>

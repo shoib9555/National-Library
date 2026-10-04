@@ -83,6 +83,39 @@ function Login() {
             <div className="mx-auto mt-5 h-px w-24 bg-blue-400" />
           </div>
 
+          {/* Daily Study Plans */}
+          <div className="mx-auto mb-7 max-w-4xl rounded-2xl border border-white/15 bg-white/10 px-4 py-4 shadow-lg backdrop-blur-md">
+            <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.2em] text-blue-200">
+              Daily Study Plans
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+              <span className="font-medium text-slate-200">
+                24 Hrs <span className="font-bold text-white">₹40/day</span>
+              </span>
+
+              <span className="hidden text-slate-500 sm:inline">•</span>
+
+              <span className="font-medium text-slate-200">
+                12 Hrs <span className="font-bold text-white">₹30/day</span>
+              </span>
+
+              <span className="hidden text-slate-500 sm:inline">•</span>
+
+              <span className="font-medium text-slate-200">
+                6 Hrs <span className="font-bold text-white">₹25/day</span>
+              </span>
+
+              <span className="hidden text-slate-500 sm:inline">•</span>
+
+              <span className="font-medium text-slate-200">
+                4 Hrs <span className="font-bold text-white">₹20/day</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Portal Selection */}
+
           {/* Portal Selection */}
           {!selectedPortal ? (
             <div className="mx-auto max-w-4xl">

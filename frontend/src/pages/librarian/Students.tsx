@@ -70,6 +70,7 @@ function Students() {
 
   const [creatingStudent, setCreatingStudent] = useState(false)
   const [formError, setFormError] = useState("")
+  const [formFieldErrors, setFormFieldErrors] = useState<Record<string, string>>({})
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -80,6 +81,83 @@ function Students() {
       ...previous,
       [name]: value,
     }))
+
+    setFormFieldErrors((previous) => {
+      if (!previous[name]) {
+        return previous
+      }
+
+      const updated = { ...previous }
+      delete updated[name]
+      return updated
+    })
+  }
+
+  const validateCreateStudentForm = () => {
+    const errors: Record<string, string> = {}
+
+    const nameRegex = /^[A-Za-z][A-Za-z\s.'-]{1,}$/
+    const phoneRegex = /^[6-9]\d{9}$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    const name = formData.name.trim()
+    const phone = formData.phone.trim()
+    const email = formData.email.trim()
+    const address = formData.address.trim()
+    const emergencyName = formData.emergencyContactName.trim()
+    const emergencyPhone = formData.emergencyContactPhone.trim()
+    const aadhaar = formData.aadhaarNumber.trim()
+
+    if (!name) {
+      errors.name = "Full name is required."
+    } else if (name.length < 2) {
+      errors.name = "Name must contain at least 2 characters."
+    } else if (!nameRegex.test(name)) {
+      errors.name = "Enter a valid name using letters, spaces, dots, hyphens or apostrophes."
+    }
+
+    if (!phone) {
+      errors.phone = "Phone number is required."
+    } else if (!phoneRegex.test(phone)) {
+      errors.phone = "Enter a valid 10-digit Indian phone number."
+    }
+
+    if (!email) {
+      errors.email = "Email address is required."
+    } else if (!emailRegex.test(email)) {
+      errors.email = "Enter a valid email address."
+    }
+
+    if (!address) {
+      errors.address = "Address is required."
+    } else if (address.length < 5) {
+      errors.address = "Address must contain at least 5 characters."
+    }
+
+    if (emergencyName && !nameRegex.test(emergencyName)) {
+      errors.emergencyContactName =
+        "Enter a valid emergency contact name."
+    }
+
+    if (emergencyPhone && !phoneRegex.test(emergencyPhone)) {
+      errors.emergencyContactPhone =
+        "Enter a valid 10-digit Indian phone number."
+    }
+
+    if (aadhaar && !/^\d{12}$/.test(aadhaar)) {
+      errors.aadhaarNumber =
+        "Aadhaar number must contain exactly 12 digits."
+    }
+
+    if (!formData.joiningDate) {
+      errors.joiningDate = "Please select a joining date and time."
+    } else if (Number.isNaN(new Date(formData.joiningDate).getTime())) {
+      errors.joiningDate = "Enter a valid joining date and time."
+    }
+
+    setFormFieldErrors(errors)
+
+    return Object.keys(errors).length === 0
   }
 
   const handleCreateStudent = async (
@@ -88,6 +166,11 @@ function Students() {
     e.preventDefault()
 
     setFormError("")
+
+    if (!validateCreateStudentForm()) {
+      return
+    }
+
     setCreatingStudent(true)
 
     try {
@@ -115,6 +198,8 @@ function Students() {
         emergencyContactPhone: "",
         joiningDate: "",
       })
+
+      setFormFieldErrors({})
 
       const data = await getStudents()
       setStudents(data.students)
@@ -176,7 +261,7 @@ function Students() {
     setSettingPassword(true)
 
     try {
-     await setPassword({
+      await setPassword({
         setupToken,
         password,
       })
@@ -344,7 +429,7 @@ function Students() {
     })
   }, [students, searchQuery, statusFilter])
 
- 
+
 
   useEffect(() => {
     setCurrentPage(1)
@@ -973,7 +1058,7 @@ function Students() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreateStudent}>
+            <form onSubmit={handleCreateStudent} noValidate>
 
               <div className="px-8 py-7">
 
@@ -1000,12 +1085,19 @@ function Students() {
                       onChange={handleInputChange}
                       placeholder="Enter student name"
                       required
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.name ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      Minimum 2 characters
-                    </p>
+                    {formFieldErrors.name ? (
+                      <p className="mt-2 text-xs text-red-600">
+                        {formFieldErrors.name}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Minimum 2 characters
+                      </p>
+                    )}
                   </div>
 
                   {/* Phone */}
@@ -1021,12 +1113,20 @@ function Students() {
                       onChange={handleInputChange}
                       placeholder="Enter 10-digit phone number"
                       required
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${
+  formFieldErrors.phone ? "border-red-400" : "border-gray-300"
+}`}
                     />
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      Must be a valid Indian phone number
-                    </p>
+                    {formFieldErrors.phone ? (
+                      <p className="mt-2 text-xs text-red-600">
+                        {formFieldErrors.phone}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Must be a valid Indian phone number
+                      </p>
+                    )}
                   </div>
 
                   {/* Email */}
@@ -1042,12 +1142,18 @@ function Students() {
                       onChange={handleInputChange}
                       placeholder="Enter student email"
                       required
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.email ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
-
-                    <p className="text-xs text-gray-500 mt-2">
-                      Must be a valid email address
-                    </p>
+                    {formFieldErrors.email ? (
+                      <p className="mt-2 text-xs text-red-600">
+                        {formFieldErrors.email}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Must be a valid email address
+                      </p>
+                    )}
                   </div>
 
                   {/* Aadhaar */}
@@ -1062,12 +1168,21 @@ function Students() {
                       value={formData.aadhaarNumber}
                       onChange={handleInputChange}
                       placeholder="Enter Aadhaar / ID proof"
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.aadhaarNumber
+                          ? "border-red-400"
+                          : "border-gray-300"
+                        }`}
                     />
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      Optional
-                    </p>
+                    {formFieldErrors.aadhaarNumber ? (
+                      <p className="mt-2 text-xs text-red-600">
+                        {formFieldErrors.aadhaarNumber}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Optional
+                      </p>
+                    )}
                   </div>
 
                   {/* Address */}
@@ -1083,12 +1198,19 @@ function Students() {
                       placeholder="Enter full address"
                       required
                       rows={3}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-800 placeholder-gray-400 outline-none resize-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full rounded-lg border px-4 py-3 text-gray-800 placeholder-gray-400 outline-none resize-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.address ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      Minimum 5 characters
-                    </p>
+                    {formFieldErrors.address ? (
+                      <p className="mt-2 text-xs text-red-600">
+                        {formFieldErrors.address}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Minimum 5 characters
+                      </p>
+                    )}
                   </div>
 
                   {/* Emergency Contact Name */}
@@ -1104,12 +1226,21 @@ function Students() {
                       onChange={handleInputChange}
                       placeholder="Enter emergency contact name"
 
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.emergencyContactName
+                          ? "border-red-400"
+                          : "border-gray-300"
+                        }`}
                     />
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      Optional
-                    </p>
+                    {formFieldErrors.emergencyContactName ? (
+                      <p className="mt-2 text-xs text-red-600">
+                        {formFieldErrors.emergencyContactName}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Optional
+                      </p>
+                    )}
                   </div>
 
                   {/* Emergency Contact Phone */}
@@ -1125,12 +1256,21 @@ function Students() {
                       onChange={handleInputChange}
                       placeholder="Enter 10-digit phone number"
 
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.emergencyContactPhone
+                          ? "border-red-400"
+                          : "border-gray-300"
+                        }`}
                     />
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      Optional
-                    </p>
+                    {formFieldErrors.emergencyContactPhone ? (
+                      <p className="mt-2 text-xs text-red-600">
+                        {formFieldErrors.emergencyContactPhone}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Optional
+                      </p>
+                    )}
                   </div>
 
                   {/* Joining Date */}
@@ -1148,9 +1288,15 @@ function Students() {
                       className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
                     />
 
-                    <p className="text-xs text-gray-500 mt-2">
-                      Select date and time
-                    </p>
+                    {formFieldErrors.joiningDate ? (
+                      <p className="mt-2 text-xs text-red-600">
+                        {formFieldErrors.joiningDate}
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Select date and time
+                      </p>
+                    )}
                   </div>
 
                 </div>
@@ -1183,7 +1329,7 @@ function Students() {
                           A student code will be generated automatically
                         </li>
                         <li>
-                        A verification OTP will be generated for the student.
+                          A verification OTP will be generated for the student.
                         </li>
                       </ul>
                     </div>

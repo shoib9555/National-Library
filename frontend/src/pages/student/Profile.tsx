@@ -180,7 +180,7 @@ function Profile() {
       </section>
 
       <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center gap-5">
+        <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
           <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-blue-100 bg-blue-50">
             {student?.profilePhotoUrl ? (
               <img

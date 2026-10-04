@@ -10,6 +10,8 @@ import {
 export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(true)
+  const [savingNote, setSavingNote] = useState(false)
+  const [deletingNote, setDeletingNote] = useState(false)
   const [search, setSearch] = useState("")
 
   const [showModal, setShowModal] = useState(false)
@@ -84,6 +86,8 @@ export default function Notes() {
     }
 
     try {
+      setSavingNote(true)
+
       if (selectedNote) {
         const updatedNote = await updateNote(selectedNote.id, {
           title: title.trim(),
@@ -107,6 +111,8 @@ export default function Notes() {
       closeModal()
     } catch (error) {
       console.error("Failed to save note:", error)
+    } finally {
+      setSavingNote(false)
     }
   }
 
@@ -121,6 +127,8 @@ export default function Notes() {
     }
 
     try {
+      setDeletingNote(true)
+
       await deleteNote(noteToDelete)
 
       setNotes((currentNotes) =>
@@ -131,6 +139,8 @@ export default function Notes() {
       setNoteToDelete(null)
     } catch (error) {
       console.error("Failed to delete note:", error)
+    } finally {
+      setDeletingNote(false)
     }
   }
 
@@ -340,12 +350,18 @@ export default function Notes() {
                 >
                   Cancel
                 </button>
-
                 <button
                   type="submit"
-                  className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                  disabled={savingNote}
+                  className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {selectedNote ? "Save Changes" : "Add Note"}
+                  {savingNote
+                    ? selectedNote
+                      ? "Saving..."
+                      : "Adding..."
+                    : selectedNote
+                      ? "Save Changes"
+                      : "Add Note"}
                 </button>
               </div>
             </form>
@@ -416,9 +432,10 @@ export default function Notes() {
               <button
                 type="button"
                 onClick={confirmDelete}
-                className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+                disabled={deletingNote}
+                className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Delete
+                {deletingNote ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

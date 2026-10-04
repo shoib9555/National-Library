@@ -242,14 +242,14 @@ function StudentDashboard() {
         <div className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-blue-200/30" />
         <div className="pointer-events-none absolute -bottom-20 right-32 h-44 w-44 rounded-full bg-indigo-200/20" />
 
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-50 to-blue-100 px-9 py-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-50 to-blue-100 px-5 py-6 sm:px-9 sm:py-8">
 
-          <div className="pr-28">
-            <p className="text-lg font-semibold uppercase tracking-wider text-blue-600">
+          <div className="pr-24 sm:pr-28">
+            <p className="text-sm font-semibold uppercase tracking-wider text-blue-600 sm:text-lg">
               Student Dashboard
             </p>
 
-            <h1 className="mt-3 text-4xl font-bold text-slate-900">
+            <h1 className="mt-3 break-words text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">
               Welcome, {student?.name}
             </h1>
 
@@ -262,8 +262,8 @@ function StudentDashboard() {
           </div>
 
           {/* Profile Photo - Top Right */}
-          <div className="absolute right-8 top-6">
-            <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
+          <div className="absolute right-4 top-4 sm:right-8 sm:top-6">
+            <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-white bg-white shadow-lg sm:h-32 sm:w-32 sm:border-4">
               {student?.profilePhotoUrl ? (
                 <img
                   src={student.profilePhotoUrl}
