@@ -340,7 +340,7 @@ function Membership() {
               >
 
                 {/* Membership Header */}
-                <div className="flex flex-col gap-4 bg-gradient-to-r from-[#eef6ff] to-[#f7fbff] px-7 py-5 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-4 bg-gradient-to-r from-[#eef6ff] to-[#f7fbff] px-5 py-5 sm:px-7 md:flex-row md:items-center md:justify-between">
 
                   <div className="flex items-center gap-4">
 
