@@ -96,7 +96,7 @@ function LibrarianLayout() {
 
       loadUnreadNotificationCount()
 
-    }, 5000)
+    }, 60_000)
 
 
 

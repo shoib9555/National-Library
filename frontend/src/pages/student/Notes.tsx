@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios"
 import { useEffect, useMemo, useState } from "react"
 import {
   createNote,
@@ -6,6 +7,47 @@ import {
   updateNote,
   type Note,
 } from "../../apis/noteApi"
+
+function getNoteErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  if (isAxiosError(error)) {
+    const data = error.response?.data as
+      | { message?: unknown }
+      | undefined
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message
+    }
+
+    if (error.response?.status === 401) {
+      return "Your session has expired. Please log in again."
+    }
+
+    if (error.response?.status === 403) {
+      return "You don't have permission to perform this action."
+    }
+
+    if (error.response?.status === 404) {
+      return "The requested note could not be found."
+    }
+
+    if (error.response?.status === 429) {
+      return "Too many requests. Please try again later."
+    }
+
+    if (error.response && error.response.status >= 500) {
+      return "The server encountered an error. Please try again later."
+    }
+
+    if (!error.response) {
+      return "Unable to connect to the server. Check your internet connection."
+    }
+  }
+
+  return fallback
+}
 
 export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -23,15 +65,25 @@ export default function Notes() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [noteToDelete, setNoteToDelete] = useState<number | null>(null)
 
+  const [pageError, setPageError] = useState("")
+  const [formError, setFormError] = useState("")
+  const [titleError, setTitleError] = useState("")
+  const [contentError, setContentError] = useState("")
+  const [actionError, setActionError] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
+
   const loadNotes = async () => {
     try {
       setLoading(true)
+      setPageError("")
 
       const data = await getMyNotes()
-
       setNotes(data)
     } catch (error) {
       console.error("Failed to load notes:", error)
+      setPageError(
+        getNoteErrorMessage(error, "Failed to load your notes."),
+      )
     } finally {
       setLoading(false)
     }
@@ -81,7 +133,34 @@ export default function Notes() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    if (!title.trim() || !content.trim()) {
+
+
+    const trimmedTitle = title.trim()
+    const trimmedContent = content.trim()
+
+    setFormError("")
+    setTitleError("")
+    setContentError("")
+    setActionError("")
+    setSuccessMessage("")
+
+    if (!trimmedTitle) {
+      setTitleError("Please enter a note title.")
+      return
+    }
+
+    if (trimmedTitle.length > 50) {
+      setTitleError("Note title cannot exceed 50 characters.")
+      return
+    }
+
+    if (!trimmedContent) {
+      setContentError("Please enter your note content.")
+      return
+    }
+
+    if (trimmedContent.length > 1000) {
+      setContentError("Note content cannot exceed 1,000 characters.")
       return
     }
 
@@ -111,12 +190,22 @@ export default function Notes() {
       closeModal()
     } catch (error) {
       console.error("Failed to save note:", error)
+
+      setFormError(
+        getNoteErrorMessage(
+          error,
+          selectedNote
+            ? "Failed to update the note. Please try again."
+            : "Failed to create the note. Please try again.",
+        ),
+      )
     } finally {
       setSavingNote(false)
     }
   }
 
   const handleDelete = (id: number) => {
+    setActionError("")
     setNoteToDelete(id)
     setShowDeleteModal(true)
   }
@@ -137,8 +226,13 @@ export default function Notes() {
 
       setShowDeleteModal(false)
       setNoteToDelete(null)
+      setSuccessMessage("Note deleted successfully!")
+      setActionError("")
     } catch (error) {
       console.error("Failed to delete note:", error)
+      setActionError(
+        getNoteErrorMessage(error, "Failed to delete the note."),
+      )
     } finally {
       setDeletingNote(false)
     }
@@ -209,10 +303,56 @@ export default function Notes() {
         />
       </div>
 
+      {successMessage && (
+        <div
+          role="status"
+          className="mb-5 flex items-center justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+        >
+          <p>{successMessage}</p>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage("")}
+            className="ml-3 font-semibold underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {pageError && (
+        <div
+          role="alert"
+          className="mb-5 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          <p>{pageError}</p>
+          <button
+            type="button"
+            onClick={loadNotes}
+            className="ml-3 font-semibold underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Notes */}
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Loading your notes...
+        </div>
+      ) : pageError ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center">
+          <p className="font-semibold text-red-700">
+            Could not load your notes.
+          </p>
+          <p className="mt-2 text-sm text-red-600">{pageError}</p>
+          <button
+            type="button"
+            onClick={loadNotes}
+            className="mt-4 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Try Again
+          </button>
         </div>
       ) : filteredNotes.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
@@ -311,7 +451,19 @@ export default function Notes() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+              noValidate
+            >
+              {formError && (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
+                  {formError}
+                </div>
+              )}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Note Title
@@ -320,12 +472,23 @@ export default function Notes() {
                 <input
                   type="text"
                   value={title}
-                  onChange={(event) => setTitle(event.target.value)}
+                  onChange={(event) => {
+                    setTitle(event.target.value)
+                    setTitleError("")
+                    setFormError("")
+                  }}
                   placeholder="e.g. Sliding Window DSA Notes"
+                  maxLength={50}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
                   required
                 />
               </div>
+
+              {titleError && (
+                <p role="alert" className="mt-2 text-sm text-red-600">
+                  {titleError}
+                </p>
+              )}
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -334,13 +497,28 @@ export default function Notes() {
 
                 <textarea
                   value={content}
-                  onChange={(event) => setContent(event.target.value)}
+                  onChange={(event) => {
+                    setContent(event.target.value)
+                    setContentError("")
+                    setFormError("")
+                  }}
                   placeholder="Write your detailed notes here..."
+                  maxLength={1000}
                   rows={10}
                   className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm leading-6 outline-none focus:border-blue-500"
                   required
                 />
               </div>
+
+              <p className="mt-1 text-right text-xs text-slate-500">
+                {content.length}/1000 characters
+              </p>
+
+              {contentError && (
+                <p role="alert" className="mt-2 text-sm text-red-600">
+                  {contentError}
+                </p>
+              )}
 
               <div className="flex justify-end gap-3 pt-2">
                 <button
@@ -414,6 +592,15 @@ export default function Notes() {
                   Are you sure you want to delete this note? This
                   action cannot be undone.
                 </p>
+
+                {actionError && (
+                  <p
+                    role="alert"
+                    className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                  >
+                    {actionError}
+                  </p>
+                )}
               </div>
             </div>
 

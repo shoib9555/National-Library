@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { isAxiosError } from "axios"
 import {
   createTodo,
   deleteTodo,
@@ -6,6 +7,47 @@ import {
   updateTodo,
   type Todo,
 } from "../../apis/todoApi"
+
+function getTodoErrorMessage(
+  error: unknown,
+  fallback: string,
+): string {
+  if (isAxiosError(error)) {
+    const data = error.response?.data as
+      | { message?: unknown }
+      | undefined
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message
+    }
+
+    if (error.response?.status === 401) {
+      return "Your session has expired. Please log in again."
+    }
+
+    if (error.response?.status === 403) {
+      return "You don't have permission to perform this action."
+    }
+
+    if (error.response?.status === 404) {
+      return "The requested todo could not be found."
+    }
+
+    if (error.response?.status === 429) {
+      return "Too many requests. Please wait a moment and try again."
+    }
+
+    if (error.response && error.response.status >= 500) {
+      return "The server encountered an error. Please try again later."
+    }
+
+    if (!error.response) {
+      return "Unable to connect to the server. Check your internet connection."
+    }
+  }
+
+  return fallback
+}
 
 export default function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([])
@@ -24,13 +66,26 @@ export default function TodoList() {
   const [deletingTodo, setDeletingTodo] = useState(false)
   const [todoToDelete, setTodoToDelete] = useState<number | null>(null)
 
+  const [pageError, setPageError] = useState("")
+  const [formError, setFormError] = useState("")
+  const [titleError, setTitleError] = useState("")
+  const [actionError, setActionError] = useState("")
+
+  const [successMessage, setSuccessMessage] = useState("")
+  const [descriptionError, setDescriptionError] = useState("")
+
   const loadTodos = async () => {
     try {
       setLoading(true)
+      setPageError("")
+
       const data = await getMyTodos()
       setTodos(data)
     } catch (error) {
       console.error("Failed to load todos:", error)
+      setPageError(
+        getTodoErrorMessage(error, "Failed to load your todos."),
+      )
     } finally {
       setLoading(false)
     }
@@ -67,6 +122,8 @@ export default function TodoList() {
     setDescription("")
     setDueDate("")
     setEditingTodo(null)
+    setFormError("")
+    setTitleError("")
   }
 
   const openAddModal = () => {
@@ -96,15 +153,32 @@ export default function TodoList() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    if (!title.trim()) {
+    const trimmedTitle = title.trim()
+
+    setFormError("")
+    setTitleError("")
+
+    if (!trimmedTitle) {
+      setTitleError("Please enter a task title.")
+      return
+    }
+
+    if (trimmedTitle.length > 50) {
+      setTitleError("Task title cannot exceed 50 characters.")
+      return
+    }
+
+    if (!description.trim()) {
+      setDescriptionError("Please enter a task description.")
       return
     }
 
     try {
       setSavingTodo(true)
+
       if (editingTodo) {
         const updatedTodo = await updateTodo(editingTodo.id, {
-          title: title.trim(),
+          title: trimmedTitle,
           description: description.trim(),
           dueDate: dueDate
             ? new Date(`${dueDate}T23:59:59`).toISOString()
@@ -118,7 +192,7 @@ export default function TodoList() {
         )
       } else {
         const newTodo = await createTodo({
-          title: title.trim(),
+          title: trimmedTitle,
           description: description.trim(),
           dueDate: dueDate
             ? new Date(`${dueDate}T23:59:59`).toISOString()
@@ -131,6 +205,14 @@ export default function TodoList() {
       closeModal()
     } catch (error) {
       console.error("Failed to save todo:", error)
+      setFormError(
+        getTodoErrorMessage(
+          error,
+          editingTodo
+            ? "Failed to update the task. Please try again."
+            : "Failed to create the task. Please try again.",
+        ),
+      )
     } finally {
       setSavingTodo(false)
     }
@@ -149,6 +231,9 @@ export default function TodoList() {
       )
     } catch (error) {
       console.error("Failed to update todo:", error)
+      setActionError(
+        getTodoErrorMessage(error, "Failed to update the task."),
+      )
     }
   }
 
@@ -163,7 +248,9 @@ export default function TodoList() {
     }
 
     try {
+      setActionError("")
       setDeletingTodo(true)
+
 
       await deleteTodo(todoToDelete)
 
@@ -173,8 +260,13 @@ export default function TodoList() {
 
       setShowDeleteModal(false)
       setTodoToDelete(null)
+      setSuccessMessage("Todo deleted successfully!")
+      setActionError("")
     } catch (error) {
       console.error("Failed to delete todo:", error)
+      setActionError(
+        getTodoErrorMessage(error, "Failed to delete the task."),
+      )
     } finally {
       setDeletingTodo(false)
     }
@@ -328,10 +420,72 @@ export default function TodoList() {
         />
       </div>
 
+      {pageError && (
+        <div
+          role="alert"
+          className="mb-5 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          <p>{pageError}</p>
+          <button
+            type="button"
+            onClick={loadTodos}
+            className="shrink-0 font-semibold underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {actionError && (
+        <div
+          role="alert"
+          className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {actionError}
+          <button
+            type="button"
+            onClick={() => setActionError("")}
+            className="ml-3 font-semibold underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {successMessage && (
+        <div
+          role="status"
+          className="mb-5 flex items-center justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+        >
+          <p>{successMessage}</p>
+          <button
+            type="button"
+            onClick={() => setSuccessMessage("")}
+            className="ml-3 font-semibold underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Todo Lists */}
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           Loading your todos...
+        </div>
+      ) : pageError ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-10 text-center">
+          <p className="font-semibold text-red-700">
+            Could not load your todos.
+          </p>
+          <p className="mt-2 text-sm text-red-600">{pageError}</p>
+          <button
+            type="button"
+            onClick={loadTodos}
+            className="mt-4 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            Try Again
+          </button>
         </div>
       ) : filteredTodos.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
@@ -422,6 +576,14 @@ export default function TodoList() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              {formError && (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
+                  {formError}
+                </div>
+              )}
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Task Title
@@ -430,28 +592,58 @@ export default function TodoList() {
                 <input
                   type="text"
                   value={title}
-                  onChange={(event) => setTitle(event.target.value)}
+                  onChange={(event) => {
+                    setTitle(event.target.value)
+                    setTitleError("")
+                    setFormError("")
+                  }}
                   placeholder="e.g. Complete 3 DSA problems"
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
-                  required
+                  maxLength={50}
+                  aria-invalid={Boolean(titleError)}
+                  aria-describedby={titleError ? "todo-title-error" : undefined}
+                  className={`w-full rounded-xl border px-4 py-3 text-sm outline-none focus:border-blue-500 ${titleError ? "border-red-500" : "border-slate-200"
+                    }`}
                 />
+
+                {titleError && (
+                  <p id="todo-title-error" role="alert" className="mt-2 text-sm text-red-600">
+                    {titleError}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Description
+                  Description <span className="text-red-500">*</span>
                 </label>
 
                 <textarea
                   value={description}
-                  onChange={(event) =>
+                  onChange={(event) => {
                     setDescription(event.target.value)
-                  }
+                    setDescriptionError("")
+                    setFormError("")
+                  }}
                   placeholder="Add details about this task..."
+                  maxLength={200}
                   rows={4}
-                  className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500"
+                  aria-invalid={Boolean(descriptionError)}
+                  className={`w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none focus:border-blue-500 ${descriptionError
+                    ? "border-red-500"
+                    : "border-slate-200"
+                    }`}
+
                 />
+                <p className="mt-1 text-right text-xs text-slate-500">
+                  {description.length}/200 characters
+                </p>
               </div>
+
+              {descriptionError && (
+                <p role="alert" className="mt-2 text-sm text-red-600">
+                  {descriptionError}
+                </p>
+              )}
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
@@ -537,6 +729,15 @@ export default function TodoList() {
                   Are you sure you want to delete this task? This action
                   cannot be undone.
                 </p>
+
+                {actionError && (
+                  <p
+                    role="alert"
+                    className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                  >
+                    {actionError}
+                  </p>
+                )}
               </div>
             </div>
 
