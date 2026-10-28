@@ -1,20 +1,22 @@
+
 import "dotenv/config";
+import fs from "node:fs";
+import path from "node:path";
 import mariadb from "mariadb";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "../generated/client";
 
-console.log("DB_SSL:", process.env.DB_SSL);
-console.log("DB_SSL_CA present:", Boolean(process.env.DB_SSL_CA));
-console.log("DB_SSL_CA length:", process.env.DB_SSL_CA?.length ?? 0);
+// Load the AWS RDS CA bundle from the backend/certs directory.
+const sslCaPath = path.resolve(
+    process.cwd(),
+    "certs",
+    "aws-rds-global-bundle.pem"
+);
 
+const sslCa = fs.readFileSync(sslCaPath, "utf8");
 
-const sslCaBase64 =
-    process.env.AWS_DB_SSL_CA || process.env.DB_SSL_CA;
-
-const sslCa = sslCaBase64
-    ? Buffer.from(sslCaBase64, "base64").toString("utf8")
-    : undefined;
-
+console.log("DB_SSL enabled:", process.env.DB_SSL === "true");
+console.log("AWS RDS CA certificate loaded:", sslCa.length > 0);
 
 const pool = mariadb.createPool({
     host: process.env.DB_HOST,
@@ -23,13 +25,13 @@ const pool = mariadb.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
 
-    // Aiven requires SSL
-    ssl: process.env.DB_SSL === "true"
-        ? {
-            ca: sslCa,
-            rejectUnauthorized: true,
-        }
-        : undefined,
+    ssl:
+        process.env.DB_SSL === "true"
+            ? {
+                  ca: sslCa,
+                  rejectUnauthorized: true,
+              }
+            : undefined,
 
     connectionLimit: 5,
     acquireTimeout: 10000,
