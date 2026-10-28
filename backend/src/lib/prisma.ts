@@ -7,9 +7,14 @@ console.log("DB_SSL:", process.env.DB_SSL);
 console.log("DB_SSL_CA present:", Boolean(process.env.DB_SSL_CA));
 console.log("DB_SSL_CA length:", process.env.DB_SSL_CA?.length ?? 0);
 
-const sslCa = process.env.DB_SSL_CA
-    ? Buffer.from(process.env.DB_SSL_CA, "base64").toString("utf8")
+
+const sslCaBase64 =
+    process.env.AWS_DB_SSL_CA || process.env.DB_SSL_CA;
+
+const sslCa = sslCaBase64
+    ? Buffer.from(sslCaBase64, "base64").toString("utf8")
     : undefined;
+
 
 const pool = mariadb.createPool({
     host: process.env.DB_HOST,
