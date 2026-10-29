@@ -1,9 +1,29 @@
 import { useEffect, useState } from "react"
+import { isAxiosError } from "axios"
 import { getSeats, assignSeat, changeSeat } from "../../apis/seatApi"
 import type { Seat } from "../../apis/seatApi"
 import { getStudents } from "../../apis/studentApi"
 import type { Student } from "../../apis/studentApi"
 
+
+function getErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  if (isAxiosError(error)) {
+    const message = error.response?.data?.message
+
+    if (typeof message === "string" && message.trim()) {
+      return message
+    }
+
+    if (!error.response) {
+      return "Unable to connect to the server. Please try again."
+    }
+  }
+
+  return fallback
+}
 
 function Seats() {
   const [seats, setSeats] = useState<Seat[]>([])
@@ -261,15 +281,15 @@ function Seats() {
                     {/* Desk */}
                     <div
                       className={`relative h-24 w-full max-w-[150px] rounded-xl border-2 p-3 shadow-sm transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-lg ${isAvailable
-                          ? "border-emerald-200 bg-emerald-50 hover:border-emerald-400"
-                          : "border-red-200 bg-red-50 hover:border-red-400"
+                        ? "border-emerald-200 bg-emerald-50 hover:border-emerald-400"
+                        : "border-red-200 bg-red-50 hover:border-red-400"
                         }`}
                     >
                       {/* Seat Number */}
                       <div
                         className={`mx-auto flex h-10 w-10 items-center justify-center rounded-lg text-sm font-bold shadow-sm ${isAvailable
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-red-100 text-red-700"
                           }`}
                       >
                         {String(seat.seatNumber).padStart(2, "0")}
@@ -278,8 +298,8 @@ function Seats() {
                       {/* Status Light */}
                       <span
                         className={`absolute right-2 top-2 h-2.5 w-2.5 rounded-full ${isAvailable
-                            ? "bg-emerald-500"
-                            : "bg-red-500"
+                          ? "bg-emerald-500"
+                          : "bg-red-500"
                           }`}
                       />
 
@@ -295,14 +315,14 @@ function Seats() {
                     <div className="flex w-[75%] justify-between">
                       <span
                         className={`h-3 w-1 rounded-b ${isAvailable
-                            ? "bg-emerald-300"
-                            : "bg-red-300"
+                          ? "bg-emerald-300"
+                          : "bg-red-300"
                           }`}
                       />
                       <span
                         className={`h-3 w-1 rounded-b ${isAvailable
-                            ? "bg-emerald-300"
-                            : "bg-red-300"
+                          ? "bg-emerald-300"
+                          : "bg-red-300"
                           }`}
                       />
                     </div>
@@ -311,15 +331,15 @@ function Seats() {
                     <div className="mt-1 flex flex-col items-center">
                       <div
                         className={`h-3 w-12 rounded-t-lg ${isAvailable
-                            ? "bg-slate-300"
-                            : "bg-slate-400"
+                          ? "bg-slate-300"
+                          : "bg-slate-400"
                           }`}
                       />
 
                       <div
                         className={`h-3 w-1 ${isAvailable
-                            ? "bg-slate-300"
-                            : "bg-slate-400"
+                          ? "bg-slate-300"
+                          : "bg-slate-400"
                           }`}
                       />
                     </div>
@@ -327,8 +347,8 @@ function Seats() {
                     {/* Status */}
                     <p
                       className={`mt-2 text-xs font-semibold ${isAvailable
-                          ? "text-emerald-700"
-                          : "text-red-700"
+                        ? "text-emerald-700"
+                        : "text-red-700"
                         }`}
                     >
                       {isAvailable ? "Available" : "Occupied"}
@@ -417,7 +437,10 @@ function Seats() {
 
                       <select
                         value={newSeatNumber}
-                        onChange={(e) => setNewSeatNumber(e.target.value)}
+                        onChange={(e) => {
+                          setNewSeatNumber(e.target.value)
+                          setAssignError("")
+                        }}
                         className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                       >
                         <option value="">
@@ -460,7 +483,10 @@ function Seats() {
                     ) : (
                       <select
                         value={selectedStudentCode}
-                        onChange={(e) => setSelectedStudentCode(e.target.value)}
+                        onChange={(e) => {
+                          setSelectedStudentCode(e.target.value)
+                          setAssignError("")
+                        }}
                         className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                       >
                         <option value="">
@@ -468,7 +494,16 @@ function Seats() {
                         </option>
 
                         {students
-                          .filter((student) => student.status === "ACTIVE")
+                          .filter((student) => {
+                            const isActive = student.status === "ACTIVE"
+
+                            const alreadyHasSeat = seats.some(
+                              (seat) =>
+                                seat.student?.studentCode === student.studentCode
+                            )
+
+                            return isActive && !alreadyHasSeat
+                          })
                           .map((student) => (
                             <option
                               key={student.id}
@@ -479,7 +514,22 @@ function Seats() {
                           ))}
                       </select>
                     )}
+
+                    {!students.some(
+                      (student) =>
+                        student.status === "ACTIVE" &&
+                        !seats.some(
+                          (seat) =>
+                            seat.student?.studentCode === student.studentCode
+                        )
+                    ) && (
+                        <p className="mt-2 text-sm text-slate-500">
+                          No eligible students available for seat assignment.
+                        </p>
+                      )}
                   </div>
+
+
                 )}
 
                 {assignError && (
@@ -526,7 +576,10 @@ function Seats() {
                           setNewSeatNumber("")
                         } catch (error) {
                           console.error("Failed to change seat:", error)
-                          setAssignError("Failed to change seat")
+
+                          setAssignError(
+                            getErrorMessage(error, "Failed to change seat. Please try again.")
+                          )
                         } finally {
                           setChangingSeat(false)
                         }
@@ -569,7 +622,10 @@ function Seats() {
                         setSelectedStudentCode("")
                       } catch (error) {
                         console.error("Failed to assign seat:", error)
-                        setAssignError("Failed to assign seat")
+
+                        setAssignError(
+                          getErrorMessage(error, "Failed to assign seat. Please try again.")
+                        )
                       } finally {
                         setAssigning(false)
                       }
