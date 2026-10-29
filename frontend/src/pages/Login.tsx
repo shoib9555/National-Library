@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { isAxiosError } from "axios"
 import { login } from "../apis/authApi"
 
 type Portal = "STUDENT" | "LIBRARIAN"
@@ -11,17 +12,49 @@ function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [passwordError, setPasswordError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault()
 
+    // Clear old errors
     setError("")
+    setEmailError("")
+    setPasswordError("")
+
+    const trimmedEmail = email.trim()
+    let isValid = true
+
+    // Validate email
+    if (!trimmedEmail) {
+      setEmailError("Please enter your email address.")
+      isValid = false
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)
+    ) {
+      setEmailError("Please enter a valid email address.")
+      isValid = false
+    }
+
+    // Validate password
+    if (!password) {
+      setPasswordError("Please enter your password.")
+      isValid = false
+    }
+
+    // Stop if validation fails
+    if (!isValid) return
+
     setLoading(true)
 
     try {
       const data = await login({
-        email,
+        email: trimmedEmail,
         password,
       })
 
@@ -34,12 +67,28 @@ function Login() {
         navigate("/student")
       }
     } catch (error) {
-      console.error(error)
-      setError("Invalid email or password")
+      console.error("Login failed:", error)
+
+      if (isAxiosError(error)) {
+        const message = error.response?.data?.message
+
+        if (typeof message === "string" && message.trim()) {
+          setError(message)
+        } else if (!error.response) {
+          setError(
+            "Unable to connect to the server. Please try again."
+          )
+        } else {
+          setError("Login failed. Please try again.")
+        }
+      } else {
+        setError("Something went wrong. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
   }
+
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -298,6 +347,8 @@ function Login() {
                   onClick={() => {
                     setSelectedPortal(null)
                     setError("")
+                    setEmailError("")
+                    setPasswordError("")
                   }}
                   className="mb-6 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-blue-600"
                 >
@@ -383,7 +434,11 @@ function Login() {
                   </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-5"
+                  noValidate
+                >
 
                   <div>
                     <label
@@ -397,11 +452,20 @@ function Login() {
                       id="email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        setEmailError("")
+                        setError("")
+                      }}
                       placeholder="Enter your email"
                       className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
                       required
                     />
+                    {emailError && (
+                      <p className="mt-1 text-sm text-red-600" role="alert">
+                        {emailError}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -416,15 +480,28 @@ function Login() {
                       id="password"
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        setPasswordError("")
+                        setError("")
+                      }}
                       placeholder="Enter your password"
                       className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
                       required
                     />
+                    {passwordError && (
+                      <p className="mt-1 text-sm text-red-600" role="alert">
+                        {passwordError}
+                      </p>
+                    )}
                   </div>
 
                   {error && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    <div
+                      className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+                      role="alert"
+                      aria-live="polite"
+                    >
                       {error}
                     </div>
                   )}
