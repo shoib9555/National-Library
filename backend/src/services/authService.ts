@@ -50,7 +50,7 @@ export async function login(email: string, password: string) {
     }
 
     if (user.student.status !== "ACTIVE") {
-      throw new Error("Student registration is not verified");
+      throw new Error("Your Account has been deactivated by Librarian.");
     }
   }
 
