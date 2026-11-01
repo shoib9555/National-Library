@@ -15,6 +15,8 @@ function NesoFloatingChat() {
     if (!message || loading) return
 
     const previousMessages = messages
+    .filter((item) => item.text.trim().length > 0)
+    .slice(-6)
 
     setMessages((prev) => [
       ...prev,

@@ -10,7 +10,6 @@ export async function askNesoController(
     req: AuthenticatedRequest,
     res: Response
 ) {
-    // Verify authentication.
     if (!req.user) {
         return res.status(401).json({
             message: "Authentication required",
@@ -18,9 +17,9 @@ export async function askNesoController(
     }
 
     try {
-        // Validate incoming message.
         const { message, history } = req.body
 
+        // Validate the current message.
         if (
             typeof message !== "string" ||
             !message.trim()
@@ -36,8 +35,11 @@ export async function askNesoController(
             })
         }
 
-        // Validate conversation history.
-        if (history !== undefined && !Array.isArray(history)) {
+        // Validate history array.
+        if (
+            history !== undefined &&
+            !Array.isArray(history)
+        ) {
             return res.status(400).json({
                 message: "Invalid conversation history",
             })
@@ -55,9 +57,9 @@ export async function askNesoController(
             for (const item of history) {
                 if (
                     !item ||
+                    typeof item !== "object" ||
                     !["user", "model"].includes(item.role) ||
                     typeof item.text !== "string" ||
-                    !item.text.trim() ||
                     item.text.length > 4000
                 ) {
                     return res.status(400).json({
@@ -65,14 +67,19 @@ export async function askNesoController(
                     })
                 }
 
+                // Ignore empty streaming placeholders.
+                if (!item.text.trim()) {
+                    continue
+                }
+
                 validatedHistory.push({
                     role: item.role,
-                    text: item.text,
+                    text: item.text.trim(),
                 })
             }
         }
 
-        // Configure Server-Sent Events.
+        // Configure streaming response.
         res.status(200)
         res.setHeader("Content-Type", "text/event-stream")
         res.setHeader("Cache-Control", "no-cache, no-transform")
@@ -93,7 +100,7 @@ export async function askNesoController(
             )
         }
 
-        // Signal that the response is complete.
+        // Signal completion.
         if (!res.destroyed) {
             res.write("data: [DONE]\n\n")
             res.end()
@@ -108,7 +115,6 @@ export async function askNesoController(
             })
         }
 
-        // Send an error event if streaming has already started.
         if (!res.destroyed) {
             res.write(
                 `event: error\ndata: ${JSON.stringify({
