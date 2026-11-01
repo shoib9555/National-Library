@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios"
 import { useEffect, useMemo, useState } from "react"
 import {
   getStudents,
@@ -11,6 +12,22 @@ import {
 
 import type { Student } from "../../apis/studentApi"
 import { setPassword } from "../../apis/authApi"
+
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (isAxiosError(error)) {
+    const message = error.response?.data?.message
+
+    if (typeof message === "string" && message.trim()) {
+      return message
+    }
+
+    if (!error.response) {
+      return "Unable to connect to the server. Please try again."
+    }
+  }
+
+  return fallback
+}
 
 function Students() {
   const [students, setStudents] = useState<Student[]>([])
@@ -40,6 +57,7 @@ function Students() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [updatingStudent, setUpdatingStudent] = useState(false)
   const [editStudentError, setEditStudentError] = useState("")
+  const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string>>({})
   const [isDeactivateOpen, setIsDeactivateOpen] = useState(false)
   const [studentToDeactivate, setStudentToDeactivate] =
     useState<Student | null>(null)
@@ -205,7 +223,9 @@ function Students() {
       setStudents(data.students)
     } catch (error) {
       console.error("Failed to create student:", error)
-      setFormError("Failed to create student")
+      setFormError(
+        getApiErrorMessage(error, "Failed to create student. Please try again.")
+      )
     } finally {
       setCreatingStudent(false)
     }
@@ -302,16 +322,17 @@ function Students() {
 
   const handleEditStudent = (student: Student) => {
     setEditStudentError("")
+    setEditFieldErrors({})
     setEditingStudent(student)
 
     setEditFormData({
-      name: student.name,
-      phone: student.phone,
-      email: student.email,
+      name: student.name ?? "",
+      phone: student.phone ?? "",
+      email: student.email ?? "",
       aadhaarNumber: "",
-      address: "",
-      emergencyContactName: "",
-      emergencyContactPhone: "",
+      address: student.address ?? "",
+      emergencyContactName: student.emergencyContactName ?? "",
+      emergencyContactPhone: student.emergencyContactPhone ?? "",
       joiningDate: student.joiningDate
         ? new Date(student.joiningDate).toISOString().slice(0, 16)
         : "",
@@ -375,6 +396,71 @@ function Students() {
       ...previous,
       [name]: value,
     }))
+
+    setEditFieldErrors((previous) => {
+      if (!previous[name]) {
+        return previous
+      }
+
+      const updated = { ...previous }
+      delete updated[name]
+      return updated
+    })
+
+    setEditStudentError("")
+  }
+
+
+  const validateEditStudentForm = () => {
+    const errors: Record<string, string> = {}
+    const nameRegex = /^[A-Za-z][A-Za-z\s.'-]{1,}$/
+    const phoneRegex = /^[6-9]\d{9}$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const name = editFormData.name.trim()
+    const phone = editFormData.phone.trim()
+    const email = editFormData.email.trim()
+    const aadhaar = editFormData.aadhaarNumber.trim()
+    const address = editFormData.address.trim()
+    const emergencyName = editFormData.emergencyContactName.trim()
+    const emergencyPhone = editFormData.emergencyContactPhone.trim()
+
+    if (!name) {
+      errors.name = "Full name is required."
+    } else if (name.length < 2 || !nameRegex.test(name)) {
+      errors.name = "Enter a valid name."
+    }
+    if (!phone) {
+      errors.phone = "Phone number is required."
+    } else if (!phoneRegex.test(phone)) {
+      errors.phone = "Enter a valid 10-digit Indian phone number."
+    }
+    if (!email) {
+      errors.email = "Email address is required."
+    } else if (!emailRegex.test(email)) {
+      errors.email = "Enter a valid email address."
+    }
+    if (aadhaar && aadhaar.length < 4) {
+      errors.aadhaarNumber = "ID proof must contain at least 4 characters."
+    }
+    if (address && address.length < 5) {
+      errors.address = "Address must contain at least 5 characters."
+    }
+    if (emergencyName && emergencyName.length < 2) {
+      errors.emergencyContactName =
+        "Emergency contact name must contain at least 2 characters."
+    }
+    if (emergencyPhone && !phoneRegex.test(emergencyPhone)) {
+      errors.emergencyContactPhone =
+        "Enter a valid 10-digit Indian phone number."
+    }
+    if (
+      editFormData.joiningDate &&
+      Number.isNaN(new Date(editFormData.joiningDate).getTime())
+    ) {
+      errors.joiningDate = "Enter a valid joining date."
+    }
+    setEditFieldErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
   const handleUpdateStudent = async (
@@ -382,29 +468,61 @@ function Students() {
   ) => {
     e.preventDefault()
 
-    if (!editingStudent) {
-      return
-    }
+    if (!editingStudent) return
 
     setEditStudentError("")
+
+    if (!validateEditStudentForm()) return
+
     setUpdatingStudent(true)
 
     try {
       await updateStudent(editingStudent.studentCode, {
-        ...editFormData,
-        joiningDate: editFormData.joiningDate
-          ? new Date(editFormData.joiningDate).toISOString()
-          : undefined,
-      })
+        name: editFormData.name.trim(),
+        phone: editFormData.phone.trim(),
+        email: editFormData.email.trim(),
 
-      setIsEditStudentOpen(false)
-      setEditingStudent(null)
+        ...(editFormData.aadhaarNumber.trim() && {
+          aadhaarNumber: editFormData.aadhaarNumber.trim(),
+        }),
+
+        ...(editFormData.address.trim() && {
+          address: editFormData.address.trim(),
+        }),
+
+        ...(editFormData.emergencyContactName.trim() && {
+          emergencyContactName:
+            editFormData.emergencyContactName.trim(),
+        }),
+
+        ...(editFormData.emergencyContactPhone.trim() && {
+          emergencyContactPhone:
+            editFormData.emergencyContactPhone.trim(),
+        }),
+
+        ...(editFormData.joiningDate && {
+          joiningDate: new Date(
+            editFormData.joiningDate
+          ).toISOString(),
+        }),
+      })
 
       const data = await getStudents()
       setStudents(data.students)
+
+      setIsEditStudentOpen(false)
+      setEditingStudent(null)
+      setEditFieldErrors({})
+      setEditStudentError("")
     } catch (error) {
       console.error("Failed to update student:", error)
-      setEditStudentError("Failed to update student")
+
+      setEditStudentError(
+        getApiErrorMessage(
+          error,
+          "Failed to update student. Please try again."
+        )
+      )
     } finally {
       setUpdatingStudent(false)
     }
@@ -1769,7 +1887,7 @@ function Students() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleUpdateStudent}>
+            <form onSubmit={handleUpdateStudent} noValidate>
 
               <div className="px-8 py-7">
 
@@ -1810,8 +1928,15 @@ function Students() {
                       value={editFormData.name}
                       onChange={handleEditInputChange}
                       required
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.name ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
+
+                    {editFieldErrors.name && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {editFieldErrors.name}
+                      </p>
+                    )}
                   </div>
 
                   {/* Phone */}
@@ -1826,8 +1951,15 @@ function Students() {
                       value={editFormData.phone}
                       onChange={handleEditInputChange}
                       required
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.phone ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
+
+                    {editFieldErrors.phone && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {editFieldErrors.phone}
+                      </p>
+                    )}
                   </div>
 
                   {/* Email */}
@@ -1842,8 +1974,15 @@ function Students() {
                       value={editFormData.email}
                       onChange={handleEditInputChange}
                       required
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.email ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
+
+                    {editFieldErrors.email && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {editFieldErrors.email}
+                      </p>
+                    )}
                   </div>
 
                   {/* Aadhaar */}
@@ -1854,12 +1993,19 @@ function Students() {
 
                     <input
                       type="text"
-                      name="aadhaarNumber"
+                      name="aadharnumber"
                       value={editFormData.aadhaarNumber}
                       onChange={handleEditInputChange}
-                      placeholder="Enter ID proof"
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.aadhaarNumber ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
+
+                    {editFieldErrors.aadhaarNumber && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {editFieldErrors.aadhaarNumber}
+                      </p>
+                    )}
                   </div>
 
                   {/* Address */}
@@ -1876,6 +2022,11 @@ function Students() {
                       rows={3}
                       className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-800 placeholder-gray-400 outline-none resize-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
                     />
+                    {editFieldErrors.address && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {editFieldErrors.address}
+                      </p>
+                    )}
                   </div>
 
                   {/* Emergency Name */}
@@ -1886,12 +2037,19 @@ function Students() {
 
                     <input
                       type="text"
-                      name="emergencyContactName"
+                      name="name"
                       value={editFormData.emergencyContactName}
                       onChange={handleEditInputChange}
-                      placeholder="Enter emergency contact name"
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.emergencyContactName ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
+
+                    {editFieldErrors.emergencyContactName && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {editFieldErrors.emergencyContactName}
+                      </p>
+                    )}
                   </div>
 
                   {/* Emergency Phone */}
@@ -1902,12 +2060,19 @@ function Students() {
 
                     <input
                       type="tel"
-                      name="emergencyContactPhone"
+                      name="phone"
                       value={editFormData.emergencyContactPhone}
                       onChange={handleEditInputChange}
-                      placeholder="Enter emergency contact phone"
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100"
+
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.emergencyContactPhone ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
+
+                    {editFieldErrors.emergencyContactPhone && (
+                      <p className="mt-2 text-xs text-red-600">
+                        {editFieldErrors.emergencyContactPhone}
+                      </p>
+                    )}
                   </div>
 
                   {/* Joining Date */}

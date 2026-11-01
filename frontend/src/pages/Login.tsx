@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { isAxiosError } from "axios"
 import { login } from "../apis/authApi"
-
+import nationalLibraryLogo from "../assets/national-library-logo.png"
 type Portal = "STUDENT" | "LIBRARIAN"
 
 function Login() {
@@ -114,15 +114,13 @@ function Login() {
 
           {/* Branding */}
           <div className="mb-6 text-center text-white">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-xl">
-              <span className="text-2xl font-black text-[#10284a]">
-                NL
-              </span>
+            <div className="mx-auto mb-5 w-fit rounded-2xl bg-white p-3 shadow-xl">
+              <img
+                src={nationalLibraryLogo}
+                alt="The National Library"
+                className="h-auto w-64 object-contain"
+              />
             </div>
-
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              The National Library
-            </h1>
 
             <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base">
               Your dedicated digital platform for a focused, organized and
