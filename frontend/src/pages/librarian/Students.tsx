@@ -1993,7 +1993,7 @@ function Students() {
 
                     <input
                       type="text"
-                      name="aadharnumber"
+                      name="aadhaarNumber"
                       value={editFormData.aadhaarNumber}
                       onChange={handleEditInputChange}
 
@@ -2037,10 +2037,9 @@ function Students() {
 
                     <input
                       type="text"
-                      name="name"
+                      name="emergencyContactName"
                       value={editFormData.emergencyContactName}
                       onChange={handleEditInputChange}
-
                       className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.emergencyContactName ? "border-red-400" : "border-gray-300"
                         }`}
                     />
@@ -2060,10 +2059,9 @@ function Students() {
 
                     <input
                       type="tel"
-                      name="phone"
+                      name="emergencyContactPhone"
                       value={editFormData.emergencyContactPhone}
                       onChange={handleEditInputChange}
-
                       className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.emergencyContactPhone ? "border-red-400" : "border-gray-300"
                         }`}
                     />
