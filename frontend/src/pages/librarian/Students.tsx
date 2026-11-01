@@ -1995,7 +1995,12 @@ function Students() {
                       type="text"
                       name="aadhaarNumber"
                       value={editFormData.aadhaarNumber}
-                      onChange={handleEditInputChange}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          aadhaarNumber: e.target.value,
+                        }))
+                      }
 
                       className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.aadhaarNumber ? "border-red-400" : "border-gray-300"
                         }`}
@@ -2039,7 +2044,12 @@ function Students() {
                       type="text"
                       name="emergencyContactName"
                       value={editFormData.emergencyContactName}
-                      onChange={handleEditInputChange}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          emergencyContactName: e.target.value,
+                        }))
+                      }
                       className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.emergencyContactName ? "border-red-400" : "border-gray-300"
                         }`}
                     />
@@ -2061,7 +2071,12 @@ function Students() {
                       type="tel"
                       name="emergencyContactPhone"
                       value={editFormData.emergencyContactPhone}
-                      onChange={handleEditInputChange}
+                      onChange={(e) =>
+                        setEditFormData((prev) => ({
+                          ...prev,
+                          emergencyContactPhone: e.target.value,
+                        }))
+                      }
                       className={`w-full h-12 rounded-lg border px-4 text-gray-800 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${editFieldErrors.emergencyContactPhone ? "border-red-400" : "border-gray-300"
                         }`}
                     />
