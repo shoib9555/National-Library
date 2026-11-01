@@ -19,23 +19,51 @@ function NesoFloatingChat() {
     setMessages((prev) => [
       ...prev,
       { role: "user", text: message },
+      { role: "model", text: "" },
     ])
+
     setInput("")
     setError("")
     setLoading(true)
 
     try {
-      const response = await sendNesoMessage({
-        message,
-        history: previousMessages,
-      })
+      await sendNesoMessage(
+        {
+          message,
+          history: previousMessages,
+        },
+        (chunk) => {
+          setMessages((prev) => {
+            const updated = [...prev]
+            const lastIndex = updated.length - 1
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "model", text: response.answer },
-      ])
+            if (updated[lastIndex]?.role === "model") {
+              updated[lastIndex] = {
+                ...updated[lastIndex],
+                text: updated[lastIndex].text + chunk,
+              }
+            }
+
+            return updated
+          })
+        }
+      )
     } catch {
       setError("Neso is temporarily unavailable. Please try again.")
+
+      setMessages((prev) => {
+        const updated = [...prev]
+
+        if (
+          updated.length > 0 &&
+          updated[updated.length - 1].role === "model" &&
+          !updated[updated.length - 1].text
+        ) {
+          updated.pop()
+        }
+
+        return updated
+      })
     } finally {
       setLoading(false)
     }
@@ -91,16 +119,14 @@ function NesoFloatingChat() {
                       : "bg-slate-100 text-slate-800"
                   }`}
                 >
-                  {item.text}
+                  {item.text || (
+                    <span className="text-slate-500">
+                      Neso is thinking...
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
-
-            {loading && (
-              <p className="text-xs text-slate-500">
-                Neso is thinking...
-              </p>
-            )}
           </div>
 
           {/* Error */}

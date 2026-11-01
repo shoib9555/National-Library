@@ -11,7 +11,7 @@ const aiClientPromise = import("@google/genai").then(
     ({ GoogleGenAI }) => new GoogleGenAI({ apiKey })
 );
 
-// Neso AI's teaching personality and knowledge focus
+// Neso AI's teaching personality and knowledge focus.
 const NESO_SYSTEM_INSTRUCTION = `
 You are Neso AI, a knowledgeable, friendly and patient teacher
 designed primarily for students preparing for government competitive exams.
@@ -43,6 +43,8 @@ TEACHING APPROACH:
 5. Use tables when comparing concepts.
 6. Use Hindi if the student requests Hindi.
 7. Encourage students and never make them feel inferior.
+8. Keep answers focused and avoid unnecessary lengthy explanations.
+9. Prefer concise explanations unless the student requests detail.
 
 MCQ AND PRACTICE INSTRUCTIONS:
 
@@ -79,10 +81,16 @@ export interface NesoMessage {
     text: string;
 }
 
-export async function askNeso(
+/**
+ * Generate a streaming response from Gemini.
+ *
+ * Each text chunk is yielded immediately so the frontend
+ * can display Neso's answer progressively.
+ */
+export async function* streamNeso(
     message: string,
     history: NesoMessage[] = []
-): Promise<string> {
+): AsyncGenerator<string> {
 
     const trimmedMessage = message.trim();
 
@@ -90,8 +98,8 @@ export async function askNeso(
         throw new Error("Message cannot be empty");
     }
 
-    // Keep only the most recent 10 conversation messages.
-    const recentHistory = history.slice(-10);
+    // Keep only the latest 6 conversation messages.
+    const recentHistory = history.slice(-6);
 
     const contents = [
         ...recentHistory.map((item) => ({
@@ -107,21 +115,30 @@ export async function askNeso(
     // Get Gemini client.
     const ai = await aiClientPromise;
 
-    // Generate response.
-    const response = await ai.models.generateContent({
+    // Generate a streaming response.
+    const response = await ai.models.generateContentStream({
         model: "gemini-3.8-flash",
         contents,
         config: {
             systemInstruction: NESO_SYSTEM_INSTRUCTION,
-            temperature: 0.7,
+            temperature: 0.5,
+            maxOutputTokens: 1200,
         },
     });
 
-    const answer = response.text;
+    let receivedText = false;
 
-    if (!answer) {
-        throw new Error("Neso AI could not generate a response");
+    // Receive and yield each generated text chunk.
+    for await (const chunk of response) {
+        const text = chunk.text;
+
+        if (text) {
+            receivedText = true;
+            yield text;
+        }
     }
 
-    return answer;
+    if (!receivedText) {
+        throw new Error("Neso AI could not generate a response");
+    }
 }
