@@ -707,7 +707,17 @@ function Students() {
                   return (
                     <tr
                       key={student.id}
-                      className="border-b border-slate-100 transition hover:bg-slate-50/70"
+                      onClick={() => handleViewStudent(student.studentCode)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault()
+                          handleViewStudent(student.studentCode)
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View details for ${student.name}`}
+                      className="cursor-pointer border-b border-slate-100 transition hover:bg-blue-50/60 focus:bg-blue-50/60 focus:outline-none"
                     >
 
                       {/* Number */}
@@ -787,41 +797,14 @@ function Students() {
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4">
+                      <td
+                        className="px-6 py-4"
+                        onClick={(e) => e.stopPropagation()}
+                      >
 
                         <div className="flex items-center justify-end gap-2 whitespace-nowrap">
 
-                          {/* View */}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleViewStudent(student.studentCode)
-                            }
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                          >
-                            <svg
-                              className="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.8"
-                                d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"
-                              />
 
-                              <circle
-                                cx="12"
-                                cy="12"
-                                r="2.5"
-                                strokeWidth="1.8"
-                              />
-                            </svg>
-
-                            View
-                          </button>
 
                           {/* Edit */}
                           <button
@@ -1113,9 +1096,8 @@ function Students() {
                       onChange={handleInputChange}
                       placeholder="Enter 10-digit phone number"
                       required
-                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${
-  formFieldErrors.phone ? "border-red-400" : "border-gray-300"
-}`}
+                      className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.phone ? "border-red-400" : "border-gray-300"
+                        }`}
                     />
 
                     {formFieldErrors.phone ? (
@@ -1169,8 +1151,8 @@ function Students() {
                       onChange={handleInputChange}
                       placeholder="Enter Aadhaar / ID proof"
                       className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.aadhaarNumber
-                          ? "border-red-400"
-                          : "border-gray-300"
+                        ? "border-red-400"
+                        : "border-gray-300"
                         }`}
                     />
 
@@ -1227,8 +1209,8 @@ function Students() {
                       placeholder="Enter emergency contact name"
 
                       className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.emergencyContactName
-                          ? "border-red-400"
-                          : "border-gray-300"
+                        ? "border-red-400"
+                        : "border-gray-300"
                         }`}
                     />
 
@@ -1257,8 +1239,8 @@ function Students() {
                       placeholder="Enter 10-digit phone number"
 
                       className={`w-full h-12 rounded-lg border px-4 text-gray-800 placeholder-gray-400 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-100 ${formFieldErrors.emergencyContactPhone
-                          ? "border-red-400"
-                          : "border-gray-300"
+                        ? "border-red-400"
+                        : "border-gray-300"
                         }`}
                     />
 

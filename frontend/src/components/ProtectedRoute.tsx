@@ -44,10 +44,11 @@ function ProtectedRoute({ allowedRole }: ProtectedRouteProps) {
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center gap-3 text-sm text-slate-500">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
           Checking authentication...
-        </p>
+        </div>
       </div>
     )
   }
