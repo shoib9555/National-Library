@@ -12,6 +12,7 @@ import attendanceRoutes from "./routes/attendanceRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import librarianNotificationRoutes from "./routes/librarianNotificationRoutes";
 import todoRoutes from "./routes/todoRoutes"
+import nesoRoutes from "./routes/nesoRoutes";
 
 
 const app = express();
@@ -55,6 +56,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/librarian-notifications", librarianNotificationRoutes);
 app.use("/api", todoRoutes);
+app.use("/api/neso", nesoRoutes);
 
 
 app.use((req, res) => {

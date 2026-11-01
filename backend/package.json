@@ -12,11 +12,13 @@
   "author": "Shoib Akhtar Siddiqui",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^2.32.0",
     "@prisma/adapter-mariadb": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.11.0",
     "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",

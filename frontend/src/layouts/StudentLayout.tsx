@@ -4,6 +4,7 @@ import apiClient from "../apis/client"
 import { getMyStudentProfile } from "../apis/studentApi"
 import { dailyQuotes } from "../data/dailyQuotes"
 import nationalLibraryLogo from "../assets/national-library-logo.png"
+import NesoFloatingChat from "../components/student/NesoFloatingChat"
 
 function getDailyQuote() {
   const now = new Date()
@@ -212,6 +213,34 @@ function StudentLayout() {
         </svg>
       ),
     },
+
+
+    {
+      label: "Neso AI",
+      path: "/student/neso",
+      icon: (
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+            d="M12 3a7 7 0 00-7 7v3a3 3 0 003 3h1v-6H8a4 4 0 018 0h-1v6h1a3 3 0 003-3v-3a7 7 0 00-7-7z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+            d="M9 19h6"
+          />
+        </svg>
+      ),
+    },
+
 
     {
       label: "My Notes",
@@ -723,7 +752,7 @@ function StudentLayout() {
         </div>
 
       </div>
-
+     <NesoFloatingChat />
     </div>
   )
 }

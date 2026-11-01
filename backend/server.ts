@@ -1,6 +1,12 @@
+import "dotenv/config";
 import app from "./src/app";
 import prisma from "./src/lib/prisma";
 import { startMembershipStatusJob } from "./src/jobs/membershipJob";
+
+console.log(
+  "Gemini API key configured:",
+  Boolean(process.env.GEMINI_API_KEY)
+);
 
 const PORT = 5000;
 

@@ -25,6 +25,7 @@ import TodoList from "./pages/student/TodoList"
 import Notes from "./pages/student/Notes"
 import StudentPayments from "./pages/student/Payments"
 import StudentSettings from "./pages/student/StudentSettings"
+import NesoAI from "./pages/student/NesoAI"
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
             <Route path="attendance" element={<StudentAttendance />} />
             <Route path="todos" element={<TodoList />} />
             <Route path="notes" element={<Notes />} />
+            <Route path="neso" element={<NesoAI />} />
             <Route path="payments" element={<StudentPayments />} />
             <Route path="notifications" element={<Notifications />} />
             <Route path="/student/settings" element={<StudentSettings />} />
